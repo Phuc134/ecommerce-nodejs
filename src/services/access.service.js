@@ -2,7 +2,7 @@
 
 const shopModel = require('../models/shop.model')
 const bcrypt = require('bcrypt')
-const  crypto =require('crypto')
+const  crypto =require('node:crypto')
 const RoleShop = {
     SHOP: 'SHOP',
     WRITER: 'WRITER',
@@ -17,17 +17,20 @@ const {BadRequestError, ConflictRequestError, AuthFailureError} = require("../co
 const {findByEmail} = require("./shop.service");
 
 class AccessService{
-    /*
-     1 - check email
-     2 - match password
-     3 - create Access Token
-     4 - generate Token
-     5 - get Data return login
-    */
+
     static login = async ({email, password, refreshToken = null}) => {
+        /*
+         1 - check email
+         2 - match password
+         3 - create Access Token
+         4 - generate Token
+         5 - get Data return login
+  */
         //1
-        const foundShop = findByEmail({email});
+        const foundShop = await findByEmail({email});
         if (!foundShop) throw new BadRequestError('Shop not registered');
+        console.log(foundShop);
+        console.log(password);
         //2
         const match = bcrypt.compare(password, foundShop.password);
         if (!match) throw new AuthFailureError('Authentication error');
@@ -35,9 +38,10 @@ class AccessService{
         // created privateKey, publicKey
         const privateKey = crypto.randomBytes(64).toString('hex');
         const publicKey = crypto.randomBytes(64).toString('hex');
+
         //4 generate token
         const tokens = await createTokenPair({userId: foundShop._id, email}, publicKey, privateKey);
-
+        console.log(tokens);
         await keyTokenService.createKeyToken({
             userId: foundShop._id,
             refreshToken: tokens.refreshToken,

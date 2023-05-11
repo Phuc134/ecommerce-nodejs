@@ -21,4 +21,4 @@ class AccessController{
 
 }
 
-module.exports  =new AccessController();
+module.exports  = new AccessController();
