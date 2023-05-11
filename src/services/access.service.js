@@ -13,20 +13,19 @@ const RoleShop = {
 const keyTokenService = require('../services/keyToken.service')
 const {createTokenPair} = require("../auth/authUtils");
 const {getInfoData} = require("../utils");
+const {BadRequestError, ConflictRequestError} = require("../core/error.response");
 
 
 class AccessService{
 
     static  signUp = async ({name, email, password}) => {
-        try{
+        // try{
+
             // step1: check mail exists ??
             const holderShop = await shopModel.findOne({ email}).lean();
             if (holderShop){
-                return {
-                    code :'xxxx',
-                    message: 'Shop already registered',
+                throw new BadRequestError('Error: Shop already registered');
 
-                }
             }
 
             const passwordHash = await bcrypt.hash(password, 10)
@@ -35,41 +34,27 @@ class AccessService{
             })
 
             if (newShop){
-                // created privateKey, publicKey
-                // const {privateKey, publicKey} = crypto.generateKeyPairSync('rsa', {
-                //     modulusLength: 4096,
-                //     publicKeyEncoding: {
-                //         type: 'pkcs1',
-                //         format: 'pem'
-                //     },
-                //     privateKeyEncoding: {
-                //         type: 'pkcs1',
-                //         format: 'pem'
-                //     }
-                // })
 
-                const privateKey = crypto.getRandomValues(64).toString('hex');
-                const publicKey = crypto.getRandomValues(64).toString('hex');
+                const privateKey = crypto.randomBytes(64).toString('hex');
+                const publicKey = crypto.randomBytes(64).toString('hex');
 
                 console.log(privateKey, publicKey)
 
-                const publicKeyString = await keyTokenService.createKeyToken({
+                const keyStore = await keyTokenService.createKeyToken({
                     userId: newShop._id,
                     publicKey,
                     privateKey
                 })
 
-                if (!publicKeyString) {
+                if (!keyStore) {
                     return {
                         code: 'xxxx',
-                        message: 'publicKeyString error'
+                        message: 'keyStore error'
                     }
                 }
 
-                const publicKeyObject = crypto.createPublicKey(publicKeyString);
-                console.log('PublicKeyObject', publicKeyObject);
                 //create token pair
-                const tokens = await createTokenPair({userId: newShop._id, email}, publicKeyString, privateKey)
+                const tokens = await createTokenPair({userId: newShop._id, email}, publicKey, privateKey)
                 console.log(`Created Token Success: `, tokens)
 
                 return {
@@ -86,14 +71,14 @@ class AccessService{
                 code: 200,
                 metadata: null
             }
-        }
-        catch (error){
-            return {
-                code: 'xxx',
-                message: error.message,
-                status: 'error'
-            }
-        }
+      //  }
+        // catch (error){
+        //     return {
+        //         code: 'xxx',
+        //         message: error.message,
+        //         status: 'error'
+        //     }
+        // }
     }
 }
 
