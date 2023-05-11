@@ -9,3 +9,13 @@ x-api-key: 40950ae6d636b42b7908eb0802019a69bb0e780eeec75cf1680edffd53340afadf337
   "email": "shoptipjs18@gmail.com",
   "password": "abc123"
 }
+
+### login
+POST http://localhost:3056/v1/api/shop/login
+Content-Type: application/json
+x-api-key: 40950ae6d636b42b7908eb0802019a69bb0e780eeec75cf1680edffd53340afadf337a6b909c283aebf596a55f9879eaa50d53c950aeac88c2f01f40e17c4743
+
+{
+  "email": "shoptipjs17@gmail.com",
+  "password": "abc123"
+}
