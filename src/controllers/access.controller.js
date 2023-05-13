@@ -18,6 +18,19 @@ class AccessController{
              }
         }).send(res)
     }
+    logout = async (req, res, next) => {
+        console.log('hello');
+        new SuccessResponse({
+            message: 'logout success',
+            metadata: await accessService.logout(req.keyStore)
+        }).send(res)
+    }
+    handleRefreshToken = async (req, res, next) => {
+        new SuccessResponse({
+            message: 'Get token success',
+            metadata: await accessService.handleRefreshToken(req.body.refreshToken)
+        }).send(res);
+    }
 
 }
 

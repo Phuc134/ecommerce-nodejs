@@ -1,19 +1,11 @@
 'use strict'
 
 const keyTokenModel = require('../models/keytoken.model')
-
+const {Schema, Types} =require('mongoose')
 class KeyTokenService{
 
     static createKeyToken = async ({userId, publicKey, privateKey, refreshToken}) => {
         try{
-            // // const publicKeyString = publicKey.toString();
-            // const tokens = await keyTokenModel.create({
-            //     user: userId,
-            //     publicKey,
-            //     privateKey,
-            // })
-            //
-            // return tokens? tokens.publicKey: null
             const filter = {user: userId};
             const update = {
                 publicKey,
@@ -29,7 +21,24 @@ class KeyTokenService{
             return  error
         }
     }
-
+    static removeKeyById = async (id) => {
+        const test=await keyTokenModel.deleteOne(id);
+        console.log(test);
+        return test;
+    }
+    static findByUserId = async (userId) => {
+        console.log(userId);
+        return (keyTokenModel.findOne({user: userId}).lean());
+    }
+    static findByRefreshTokenUsed = async (refreshToken) => {
+        return keyTokenModel.findOne({refreshTokensUsed: {$in: [refreshToken]}});
+    }
+    static findByRefeshToken = async (refreshToken) => {
+        return ( keyTokenModel.findOne({refreshToken: refreshToken}));
+    }
+    static deleteKeyById =  async (userId) => {
+        return ( keyTokenModel.deleteOne({user: userId}))
+    }
 }
 
 module.exports = KeyTokenService
