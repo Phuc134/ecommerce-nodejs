@@ -38,8 +38,6 @@ class AccessService{
         //check UserId
         const foundShop = await findByEmail({email});
         if (!foundShop) throw new AuthFailureError('Shop not registered 2');
-        console.log('public Key: ',holderToken.publicKey);
-        console.log('private Key: ',holderToken.privateKey);
         //create 1 pair
         const tokens = await createTokenPair({userId, email}, holderToken.publicKey, holderToken.privateKey);
         //update Token
