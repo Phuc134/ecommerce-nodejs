@@ -20,29 +20,21 @@ class AccessService{
     /*
         check refresh token used
     */
-    static handleRefreshToken = async (refreshToken) => {
-        console.log('Day la refresh Token', refreshToken);
-        const foundToken = await keyTokenService.findByRefreshTokenUsed(refreshToken);
-        if (foundToken){
-            //decode
-            const {userId, email} = await verifyJWT(refreshToken, foundToken.privateKey);
-            //xoa tat ca token trong keyStore
+    static handleRefreshToken = async ({refreshToken, user, keyStore}) => {
+        const {userId, email} = user;
+        if (keyStore.refreshTokensUsed.includes(refreshToken)){
             await keyTokenService.deleteKeyById(userId);
-            throw new ForbiddenError('Some thing wrong happened !! Pls login')
+            throw new ForbiddenError('Something wrong happened!! pls relogin')
         }
-        //No
-        const holderToken = await keyTokenService.findByRefeshToken(refreshToken);
-        if (!holderToken) throw new AuthFailureError(`Shop not registered 1`);
-        //verify Token
-        const {userId, email} = await verifyJWT(refreshToken, holderToken.privateKey);
-        //check UserId
+        console.log('keyStore ', keyStore);
+        console.log('refreshToken ',refreshToken);
+        if (keyStore.refreshToken !== refreshToken) throw  new AuthFailureError('Shop not registered');
+
         const foundShop = await findByEmail({email});
-        if (!foundShop) throw new AuthFailureError('Shop not registered 2');
-        //create 1 pair
-        const tokens = await createTokenPair({userId, email}, holderToken.publicKey, holderToken.privateKey);
-        //update Token
-        console.log('day la token moi: ',tokens);
-        await  holderToken.updateOne({
+        if (!foundShop) throw new AuthFailureError(`Shop not registered 2`);
+
+        const tokens = await createTokenPair({userId, email}, keyStore.publicKey, keyStore.privateKey)
+        await  keyStore.updateOne({
             $set: {
                 refreshToken: tokens.refreshToken
             },
@@ -50,7 +42,6 @@ class AccessService{
                 refreshTokensUsed: refreshToken
             }
         });
-        console.log('//------',userId, email);
         return {
             user: {userId, email},
             tokens

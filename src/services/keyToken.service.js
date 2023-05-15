@@ -28,7 +28,7 @@ class KeyTokenService{
     }
     static findByUserId = async (userId) => {
         console.log(userId);
-        return (keyTokenModel.findOne({user: userId}).lean());
+        return (keyTokenModel.findOne({user: userId}));
     }
     static findByRefreshTokenUsed = async (refreshToken) => {
         return keyTokenModel.findOne({refreshTokensUsed: {$in: [refreshToken]}});
