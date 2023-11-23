@@ -2,11 +2,12 @@
 
 const {product, electronic, furniture, clothing} = require('../../models/product.model')
 const {Types} = require("mongoose");
-const {getSelectData} = require("../../utils");
+const {getSelectData, unGetSelectData, convertToObjectIdMongoDb} = require("../../utils");
+const convert = require("lodash/fp/convert");
 
 const queryProduct = async ({query, limit, skip}) => {
     return (await product.find(query)
-            .populate('product_shop','name email -_id')
+            .populate('product_shop', 'name email -_id')
             .sort({updateAt: -1})
             .skip(skip)
             .limit(limit)
@@ -56,15 +57,15 @@ const searchProductByUser = async (keySearch) => {
     const results = await product.find({
         isPublished: true,
         $text: {$search: regexSearch}
-    }, {score: {$meta: 'textScore'} })
-        .sort({score: {$meta: 'textScore'} })
+    }, {score: {$meta: 'textScore'}})
+        .sort({score: {$meta: 'textScore'}})
         .lean()
     return results;
 }
 
 const findAllProducts = async ({limit, sort, page, filter, select}) => {
     const skip = (page - 1) * limit;
-    const sortBy = (sort == 'ctime') ? {_id: -1}: {_id: 1};
+    const sortBy = (sort == 'ctime') ? {_id: -1} : {_id: 1};
     const products = await product.find(filter)
         .sort(sortBy)
         .skip(skip)
@@ -75,10 +76,38 @@ const findAllProducts = async ({limit, sort, page, filter, select}) => {
 }
 
 const findProduct = async ({product_id, unSelect}) => {
-    return await product.findById(product_id)
+    return (await product.findById(product_id)
         .select(unGetSelectData(unSelect))
-        .lean()
+        .lean())
 }
+
+const updateProductById = async ({
+                                     productId,
+                                     bodyUpdate,
+                                     model,
+                                     isNew = true
+                                 }) => {
+    return await model.findByIdAndUpdate(productId, bodyUpdate, {
+        new: isNew
+    })
+}
+
+const getProductById = async (productId) => {
+    return await product.findOne({_id: convertToObjectIdMongoDb(productId)}).lean();
+}
+const checkProductByServer = async (products) => {
+    return await Promise.all(products.map(async product => {
+        const foundProduct = await getProductById(product.productId)
+        if (foundProduct) {
+            return {
+                price: foundProduct.product_price,
+                quantity: product.quantity,
+                productId: product.productId
+            }
+        }
+    }))
+}
+
 module.exports = {
     findAllDraftsForShop,
     publishProductByShop,
@@ -86,5 +115,8 @@ module.exports = {
     unPublishProductByShop,
     searchProductByUser,
     findAllProducts,
-    findProduct
+    updateProductById,
+    findProduct,
+    getProductById,
+    checkProductByServer
 }
